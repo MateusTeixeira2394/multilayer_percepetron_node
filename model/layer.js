@@ -1,5 +1,7 @@
 function Layer(numberNeuron,numberInputs){
   this.neurons = getNeurons(numberNeuron,numberInputs);
+  this.arrI = []
+  this.arrY = []
 }
 
 function getNeurons(numberNeuron,numberInputs){

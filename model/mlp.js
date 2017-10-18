@@ -1,7 +1,10 @@
-function Mlp(inputs,outputs,layers){
+function Mlp(inputs,outputs,layers,n,e){
   this.inputs = inputs
   this.outputs = outputs
   this.layers = getLayers(layers,inputs[0].length);
+  this.n = n
+  this.e = e
+  this.epoch = 0
 }
 
 function getLayers(layers,numberInputs){
@@ -22,8 +25,63 @@ function getLayers(layers,numberInputs){
   return arr;
 }
 
+Mlp.prototype.feedForward = function() {
+  //for each row of the data sample
+  for (var i = 0; i < this.inputs.length; i++) {
 
-module.exports = function(inputs,outputs,layers){
-  var mlp = new Mlp(inputs,outputs,layers);
+    //for each layer of the mlp
+    for (var j = 0; j < this.layers.length; j++) {
+
+      //if is the first layer, it will pass the mlp inputs as entry
+      if (j == 0) {
+        this.layers[j].arrI = calculateI(this.inputs[i],this.layers[j]);
+
+      //if not, it will pass the array Y of the last layer as entry
+      }else{
+        
+      }
+
+    }
+  }
+};
+
+function hiperbolicFunction(value) {
+  var e = Math.E
+  var negValue = value*-1
+
+  return ((e**value)-(e**negValue))/((e**value)+(e**negValue))
+};
+
+function logisticFunction(value) {
+  var e = Math.E
+  var negValue = value*-1
+
+  return 1/(1+(e**negValue))
+};
+
+function calculateY(){
+
+}
+
+//calculate the array I of the layer
+function calculateI(arrInputs,layer){
+  var arrI = []
+  for (var i = 0; i < layer.neurons.length; i++) {
+    arrI.push( calculateU( arrInputs,layer.neurons[i] ) );
+  }
+  return arrI;
+}
+
+//calculate the U of the each neuron of the layer
+function calculateU(arrInputs,neuron){
+  var u = 0.0
+  for (var i = 0; i < neuron.weights.length; i++) {
+    u = u + (arrInputs[i]*neuron.weights[i])
+  }
+  return u;
+}
+
+module.exports = function(inputs,outputs,layers,n,e){
+  var mlp = new Mlp(inputs,outputs,layers,n,e);
   return mlp;
 }
