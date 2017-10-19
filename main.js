@@ -24,4 +24,6 @@ var layers = [3,2,1]
 
 var mlp = require('./model/mlp')(inputs,outputs,layers,n,e);
 
-mlp.feedForward();
+var arrY = mlp.feedForward([-1,0,0]);
+
+debugger

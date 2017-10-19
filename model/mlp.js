@@ -5,6 +5,7 @@ function Mlp(inputs,outputs,layers,n,e){
   this.n = n
   this.e = e
   this.epoch = 0
+  this.arrY = []
 }
 
 function getLayers(layers,numberInputs){
@@ -25,24 +26,30 @@ function getLayers(layers,numberInputs){
   return arr;
 }
 
-Mlp.prototype.feedForward = function() {
-  //for each row of the data sample
-  for (var i = 0; i < this.inputs.length; i++) {
+Mlp.prototype.feedForward = function(inputs) {
+
+    var arr = []
 
     //for each layer of the mlp
     for (var j = 0; j < this.layers.length; j++) {
 
       //if is the first layer, it will pass the mlp inputs as entry
       if (j == 0) {
-        this.layers[j].arrI = calculateI(this.inputs[i],this.layers[j]);
+        this.layers[j].arrI = calculateI(inputs,this.layers[j]);
 
       //if not, it will pass the array Y of the last layer as entry
+      //Obs: The array Y must be added with -1 in begin of it
       }else{
-        
+        this.layers[j].arrI = calculateI(
+          addLessOneToBegin(this.layers[j-1].arrY),
+          this.layers[j] );
       }
 
+      this.layers[j].arrY = calculateY(this.layers[j].arrI);
+
     }
-  }
+
+    return arr = this.layers[this.layers.length-1].arrY
 };
 
 function hiperbolicFunction(value) {
@@ -59,8 +66,15 @@ function logisticFunction(value) {
   return 1/(1+(e**negValue))
 };
 
-function calculateY(){
-
+//method to calculate the array Y of the layer
+//To this case were used by hiperbolic function,
+//but could be used by logistic function
+function calculateY(arrI){
+  var arrY = []
+  for (var i = 0; i < arrI.length; i++) {
+    arrY[i] = hiperbolicFunction(arrI[i]);
+  }
+  return arrY;
 }
 
 //calculate the array I of the layer
@@ -79,6 +93,11 @@ function calculateU(arrInputs,neuron){
     u = u + (arrInputs[i]*neuron.weights[i])
   }
   return u;
+}
+
+function addLessOneToBegin(arr){
+  arr.unshift(-1);
+  return arr
 }
 
 module.exports = function(inputs,outputs,layers,n,e){
