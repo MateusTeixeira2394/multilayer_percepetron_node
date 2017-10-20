@@ -26,30 +26,57 @@ function getLayers(layers,numberInputs){
   return arr;
 }
 
-Mlp.prototype.feedForward = function(inputs) {
+
+Mlp.prototype.calculateEqm = function() {
+  var eqm = 0.0
+  var p = this.outputs.length
+  for (var i = 0; i < p; i++) {
+    eqm = eqm + calculateError(this.arrY[i],this.outputs[i])
+  }
+  return eqm/p
+};
+
+
+calculateError = function(rowArrY,rowOutputs){
+  var error = 0.0
+
+  for (var i = 0; i < rowOutputs.length; i++) {
+    error = error + ((rowOutputs[i]-rowArrY[i])**2)
+  }
+  return error/2
+}
+
+Mlp.prototype.calculateArrY = function () {
+  for (var i = 0; i < this.inputs.length; i++) {
+    this.arrY.push( feedForward(this.inputs[i],this.layers) );
+  }
+};
+
+
+feedForward = function(inputs,layers) {
 
     var arr = []
 
     //for each layer of the mlp
-    for (var j = 0; j < this.layers.length; j++) {
+    for (var j = 0; j < layers.length; j++) {
 
       //if is the first layer, it will pass the mlp inputs as entry
       if (j == 0) {
-        this.layers[j].arrI = calculateI(inputs,this.layers[j]);
+        layers[j].arrI = calculateI(inputs,layers[j]);
 
       //if not, it will pass the array Y of the last layer as entry
       //Obs: The array Y must be added with -1 in begin of it
       }else{
-        this.layers[j].arrI = calculateI(
-          addLessOneToBegin(this.layers[j-1].arrY),
-          this.layers[j] );
+        layers[j].arrI = calculateI(
+          addLessOneToBegin(layers[j-1].arrY),
+          layers[j] );
       }
 
-      this.layers[j].arrY = calculateY(this.layers[j].arrI);
+      layers[j].arrY = calculateY(layers[j].arrI);
 
     }
 
-    return arr = this.layers[this.layers.length-1].arrY
+    return arr = layers[layers.length-1].arrY
 };
 
 function hiperbolicFunction(value) {
