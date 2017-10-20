@@ -52,6 +52,23 @@ Mlp.prototype.calculateArrY = function () {
   }
 };
 
+Mlp.prototype.backPropagation = function () {
+
+};
+
+updateWeigthsLastLayer = function(weigths,inputs,n,arrI,arrY){
+  for (var i = 0; i < weigths.length; i++) {
+    weigths[i] = weigths + n*sigmaLastLayer*arrY[i]
+  }
+}
+
+sigmaLastLayer = function(d,y,i){
+  return (d-y)*derivateHiperbolic(i);
+}
+
+derivateHiperbolic = function(value){
+  return value;
+}
 
 feedForward = function(inputs,layers) {
 
