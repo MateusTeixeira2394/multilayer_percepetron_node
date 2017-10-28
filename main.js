@@ -20,7 +20,7 @@ var e = 0.0001
 
 //array to represent the layers of the mlp
 //each  array elements say the number of neurons
-var layers = [3,2,2]
+var layers = [2,2]
 
 var mlp = require('./model/mlp')(inputs,outputs,layers,n,e);
 

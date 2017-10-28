@@ -52,22 +52,73 @@ Mlp.prototype.calculateArrY = function () {
   }
 };
 
-Mlp.prototype.backPropagation = function () {
+Mlp.prototype.training = function() {
 
+  // clean the array Y
+  this.arrY = []
+
+  //For each line of the inputs do:
+  for (var i = 0; i < this.inputs.length; i++) {
+
+    //Make a feed for ward and add the response to array Y
+    this.arrY.push( feedForward(this.inputs[i],this.layers) );
+
+    //Adjust the weigths with back propagation
+    this.layers = backPropagation(this.layers,this.outputs[i]);
+  }
 };
 
-updateWeigthsLastLayer = function(weigths,inputs,n,arrI,arrY){
-  for (var i = 0; i < weigths.length; i++) {
-    weigths[i] = weigths + n*sigmaLastLayer*arrY[i]
+backPropagation = function (layers,outputs) {
+
+  //for each mlp layer do:
+  for (var i = layers.length-1; i >= 0 ; i--) {
+
+    // get the sigma array of the layer
+    if (i == layers.length-1) {
+      layers[i].sigmas = getDeltasLastLayer(outputs,layers[i].arrY,layers[i].arrI)
+    }else {
+      layers[i].sigmas = getDeltasHiddenLayers(layers[i],layers[i+1]);
+    }
+
   }
+
+  return layers;
+};
+
+
+getDeltasLastLayer = function(arrD,arrY,arrI){
+  var sigmas = []
+  for (var i = 0; i < arrD.length; i++) {
+    sigmas[i] = (arrD[i]-arrY[i])*derivateHiperbolic(arrI[i]);
+  }
+  return sigmas;
 }
 
-sigmaLastLayer = function(d,y,i){
-  return (d-y)*derivateHiperbolic(i);
+getDeltasHiddenLayers = function(currentLayer,previousLayer){
+  var sigmas = []
+
+  for (var i = 0; i < currentLayer.neurons.length; i++) {
+    sigmas[i] = getGradientAux(previousLayer,i)*derivateHiperbolic(currentLayer.arrI[i]);
+  }
+
+  return sigmas;
 }
+
+getGradientAux = function(layer,j){
+  var value = 0
+
+  for (var k = 0; k < layer.sigmas.length; k++) {
+    value = value + layer.neurons[k].weigths[j]*layer.sigmas[k]
+  }
+
+  return value
+}
+
 
 derivateHiperbolic = function(value){
-  return value;
+  var e = Math.E
+  var negValue = value*(-1)
+  return 4/(((e**negValue)+(e**value))**2);
 }
 
 feedForward = function(inputs,layers) {
@@ -87,6 +138,9 @@ feedForward = function(inputs,layers) {
         layers[j].arrI = calculateI(
           addLessOneToBegin(layers[j-1].arrY),
           layers[j] );
+
+        //remove the element '-1' of the layer array Y
+        layers[j-1].arrY.shift();
       }
 
       layers[j].arrY = calculateY(layers[j].arrI);
