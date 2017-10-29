@@ -8,6 +8,10 @@ function Mlp(inputs,outputs,layers,n,e){
   this.arrY = []
 }
 
+Mlp.prototype.incrementEpoch = function() {
+  this.epoch = this.epoch + 1
+};
+
 function getLayers(layers,numberInputs){
   var arr = []
   for (var i = 0; i < layers.length; i++) {
@@ -47,9 +51,20 @@ calculateError = function(rowArrY,rowOutputs){
 }
 
 Mlp.prototype.calculateArrY = function () {
+  this.arrY = []
+
   for (var i = 0; i < this.inputs.length; i++) {
     this.arrY.push( feedForward(this.inputs[i],this.layers) );
   }
+};
+
+Mlp.prototype.test = function(data) {
+  this.arrY = []
+
+  for (var i = 0; i < data.length; i++) {
+    this.arrY.push( feedForward(data[i],this.layers) );
+  }
+  console.log(this.arrY)
 };
 
 Mlp.prototype.training = function() {
@@ -61,23 +76,41 @@ Mlp.prototype.training = function() {
   for (var i = 0; i < this.inputs.length; i++) {
 
     //Make a feed for ward and add the response to array Y
-    this.arrY.push( feedForward(this.inputs[i],this.layers) );
+    this.arrY[i] = feedForward(this.inputs[i],this.layers)
 
     //Adjust the weigths with back propagation
-    this.layers = backPropagation(this.layers,this.outputs[i]);
+    this.layers = backPropagation(this.layers,this.outputs[i],this.inputs[i],this.n);
+
   }
 };
 
-backPropagation = function (layers,outputs) {
+backPropagation = function (layers,outputs,inputs,n) {
 
   //for each mlp layer do:
   for (var i = layers.length-1; i >= 0 ; i--) {
 
-    // get the sigma array of the layer
+    // get the delta array of the layer
     if (i == layers.length-1) {
-      layers[i].sigmas = getDeltasLastLayer(outputs,layers[i].arrY,layers[i].arrI)
+      layers[i].deltas = getDeltasLastLayer(outputs,layers[i].arrY,layers[i].arrI)
     }else {
-      layers[i].sigmas = getDeltasHiddenLayers(layers[i],layers[i+1]);
+      layers[i].deltas = getDeltasHiddenLayers(layers[i],layers[i+1]);
+    }
+
+    // adjust the weigths of the layer
+    if (i == 0) {
+      // As it is the first layer there is no previous layer, so the array Y of
+      // the previous layer will be the inputs
+      layers[i] =  adjustWeights(layers[i],n,inputs);
+
+    }else {
+
+      // add element -1 to the last layer output
+      layers[i-1].arrY.unshift(-1)
+
+      layers[i] =  adjustWeights(layers[i],n,layers[i-1].arrY);
+
+      // then remove it
+      layers[i-1].arrY.shift()
     }
 
   }
@@ -85,30 +118,41 @@ backPropagation = function (layers,outputs) {
   return layers;
 };
 
+adjustWeights = function(layer,n,arrY){
+
+  for (var j = 0; j < layer.neurons.length; j++) {
+    for (var i = 0; i < layer.neurons[j].weights.length; i++) {
+      layer.neurons[j].weights[i] = layer.neurons[j].weights[i] + n*layer.deltas[j]*arrY[i]
+    }
+  }
+
+  return layer;
+
+}
 
 getDeltasLastLayer = function(arrD,arrY,arrI){
-  var sigmas = []
+  var deltas = []
   for (var i = 0; i < arrD.length; i++) {
-    sigmas[i] = (arrD[i]-arrY[i])*derivateHiperbolic(arrI[i]);
+    deltas[i] = (arrD[i]-arrY[i])*derivateHiperbolic(arrI[i]);
   }
-  return sigmas;
+  return deltas;
 }
 
 getDeltasHiddenLayers = function(currentLayer,previousLayer){
-  var sigmas = []
+  var deltas = []
 
   for (var i = 0; i < currentLayer.neurons.length; i++) {
-    sigmas[i] = getGradientAux(previousLayer,i)*derivateHiperbolic(currentLayer.arrI[i]);
+    deltas[i] = getGradientAux(previousLayer,i+1)*derivateHiperbolic(currentLayer.arrI[i]);
   }
 
-  return sigmas;
+  return deltas;
 }
 
 getGradientAux = function(layer,j){
   var value = 0
 
-  for (var k = 0; k < layer.sigmas.length; k++) {
-    value = value + layer.neurons[k].weigths[j]*layer.sigmas[k]
+  for (var k = 0; k < layer.deltas.length; k++) {
+    value = value + layer.neurons[k].weights[j]*layer.deltas[k]
   }
 
   return value

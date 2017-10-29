@@ -2,7 +2,7 @@ function Layer(numberNeuron,numberInputs){
   this.neurons = getNeurons(numberNeuron,numberInputs);
   this.arrI = []
   this.arrY = []
-  this.sigmas = []
+  this.deltas = []
 }
 
 function getNeurons(numberNeuron,numberInputs){
